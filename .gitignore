@@ -1,0 +1,21 @@
+### Linux ###
+*~
+
+### Mac ###
+.DS_Store
+
+### testing files and local dev stuff ###
+example.html
+tmp.php
+
+### config ###
+config.php
+
+### fetch_all ###
+fetch_all.php
+
+### PhpStorm ###
+*.iml
+.idea/
+*.ipr
+*.iws

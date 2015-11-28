@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Buchstaben zählen</title>
+    <style>
+        input.btn-count {
+            text-align: right;
+        }
+        button.letter {
+            width: 25px;
+        }
+    </style>
+</head>
+<body>
+<h1>Buchstaben zählen</h1>
+<div id="text"></div>
+<div id="buttons"></div>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<!--<script src="assets/game.js"></script>-->
+<script>
+    var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+
+    $(document).ready(function() {
+        initializeWebsite();
+        $('button.letter').click(letterButtonClick);
+    });
+
+    function initializeWebsite() {
+        var html = '';
+        letters.forEach(function(letter) {
+            html += '<button id="' + letter + '" name="' + letter + '" class="letter">' + letter + '</button> <input id="input-' + letter + '" name="input-' + letter + '" class="btn-count" type="text" value="0" readonly><br>';
+        });
+        $('#buttons').html(html);
+    }
+
+    function letterButtonClick() {
+        var element = $('#input-' + this.id);
+        element.val(parseInt(element.val()) + 1);
+    }
+</script>
+</body>
+</html>
