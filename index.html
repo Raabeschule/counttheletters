@@ -4,39 +4,115 @@
     <meta charset="UTF-8">
     <title>Buchstaben zählen</title>
     <style>
-        input.btn-count {
+        /* TODO: Make it look better */
+        output.btn-count {
+            -moz-transition: all .1s ease-in;
+            -o-transition: all .1s ease-in;
+            -webkit-transition: all .1s ease-in;
+            transition: all .1s ease-in;
             text-align: right;
+        }
+        output.btn-count.wrong {
+            background-color: #ff726d;
         }
         button.letter {
             width: 25px;
+        }
+        #text {
+            float: left;
+            max-width: 800px;
+        }
+        #buttons {
+            float: right;
+            width: 50px;
         }
     </style>
 </head>
 <body>
 <h1>Buchstaben zählen</h1>
-<div id="text"></div>
+<div id="timer"></div>
+<div id="text"><mark></mark><span id="remaining-text"></span></div>
 <div id="buttons"></div>
-<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <!--<script src="assets/game.js"></script>-->
 <script>
     var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+    var position = 0;
+    var text = '';
+
+    var time = 0;
+    var timer;
 
     $(document).ready(function() {
         initializeWebsite();
         $('button.letter').click(letterButtonClick);
+        timer = setTimeout(addTime, 100)
     });
 
     function initializeWebsite() {
         var html = '';
         letters.forEach(function(letter) {
-            html += '<button id="' + letter + '" name="' + letter + '" class="letter">' + letter + '</button> <input id="input-' + letter + '" name="input-' + letter + '" class="btn-count" type="text" value="0" readonly><br>';
+            html += '<button id="' + letter + '" name="' + letter + '" class="letter">' + letter + '</button> <output id="input-' + letter + '" for="' + letter + '" name="input-' + letter + '" class="btn-count">0</output><br>';
         });
         $('#buttons').html(html);
+        var url = generateUrl(1);
+        jQuery.get(url, function(data) {
+            text = data.rot13();
+            jumpWhitespace()
+            $('#remaining-text').html(text);
+        });
+    }
+
+    String.prototype.rot13 = function() {
+        return this.toString().replace(/[a-zA-Z]/g,function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);});
+    };
+
+    function generateUrl(level) {
+        var url = location.origin;
+        url += location.pathname.replace('index.html', '');
+        return url + 'texts/level-' + level + '.txt';
     }
 
     function letterButtonClick() {
+        $('.btn-count').removeClass('wrong');
         var element = $('#input-' + this.id);
-        element.val(parseInt(element.val()) + 1);
+        if(this.id == text[position].toLowerCase()) {
+            element.val(parseInt(element.val()) + 1);
+            $('#text > mark').html(text.substr(0, position + 1));
+            $('#remaining-text').html(text.substr(position + 1, text.length - 1))
+            position++;
+            jumpWhitespace()
+        } else {
+            element.addClass('wrong').delay(2000);
+            time += 5;
+            updateTimerView();
+        }
+        if(position == text.length) {
+            clearTimeout(timer);
+            alert('You win! Your time: ' + getTimeString(time)); // TODO: Make nicer
+        }
+    }
+
+    function jumpWhitespace() {
+        while(/[^A-Za-z]/.exec(text[position])) {
+            position++;
+        }
+    }
+
+    function addTime() {
+        time += 1;
+        updateTimerView();
+        timer = setTimeout(addTime, 1000);
+    }
+
+    function updateTimerView() {
+        $('#timer').html(getTimeString(time));
+    }
+
+    function getTimeString(time) {
+        minutes = Math.floor(time/60);
+        seconds = time%60;
+        return (minutes > 9 ? minutes : '0' + minutes) + ':' + (seconds > 9 ? seconds : '0' + seconds);
     }
 </script>
 </body>
