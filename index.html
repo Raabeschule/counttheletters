@@ -46,34 +46,76 @@
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <!--<script src="assets/game.js"></script>-->
 <script>
-    var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
-    var position = 0;
-    var text = '';
+    var _letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+    var _max_levels = 5;
+    var _position = 0;
+    var _text = '';
+    var _level = 0;
 
-    var time = 0;
-    var timer;
+    var _time = 0;
+    var _timer;
+    var _level_times = {};
 
     $(document).ready(function() {
         initializeWebsite();
         $('button.letter').click(letterButtonClick);
-        timer = setTimeout(addTime, 100)
+        _timer = setTimeout(addTime, 1000);
     });
 
     function initializeWebsite() {
         var html = '';
-        letters.forEach(function(letter) {
+        _letters.forEach(function(letter) {
             html += '<button id="' + letter + '" name="' + letter + '" class="letter">' + letter + '</button> <output id="input-' + letter + '" for="' + letter + '" name="input-' + letter + '" class="btn-count">0</output><br>';
         });
         $('#buttons').html(html);
 
-        var level = 0;
+        loadLevel(_level);
+    }
+
+    function resetLevel() {
+        clearTimeout(_timer);
+        $('#level-num').html('');
+        $('#remaining-text').html('');
+        $('#text > mark').html('');
+        $('.btn-count').removeClass('wrong').val('0');
+
+        _position = 0;
+        _text = '';
+        _level = 0;
+        _time = 0;
+        _timer = setTimeout(addTime, 1000);
+    }
+
+    function loadLevel(level) {
+        resetLevel();
+        _level = level;
         var url = generateUrl(level);
         $('#level-num').html(level);
         jQuery.get(url, function(data) {
-            text = data.rot13();
+            _text = data.rot13();
             jumpWhitespace();
-            $('#remaining-text').html(text);
+            $('#remaining-text').html(_text);
         });
+    }
+
+    function levelCompleted() {
+        _level_times[_level] = _time;
+        if(_level == _max_levels) {
+            alert('Congrats! You completed level ' + _level + '. Your time: ' + getTimeString(_time));
+            gameCompleted();
+        }
+        else {
+            alert('Congrats! You completed level ' + _level + '. Your time: ' + getTimeString(_time) + '. Click OK to proceed to the next level.');
+            loadLevel(_level + 1);
+        }
+    }
+
+    function gameCompleted() {
+        resetLevel();
+        $('#timer').hide();
+        $('#buttons').hide();
+        $('h1').html('The End');
+        $('#text').html('Awesome! You completed all the levels that are available (for now).<br>Your times:<br>' + JSON.stringify(_level_times)); // TODO: Make nicer
     }
 
     String.prototype.rot13 = function() {
@@ -89,42 +131,42 @@
     function letterButtonClick() {
         $('.btn-count').removeClass('wrong');
         var element = $('#input-' + this.id);
-        if(this.id == text[position].toLowerCase()) {
+        if(this.id == _text[_position].toLowerCase()) {
             element.val(parseInt(element.val()) + 1);
-            $('#text > mark').html(text.substr(0, position + 1));
-            $('#remaining-text').html(text.substr(position + 1, text.length - 1))
-            position++;
+            $('#text > mark').html(_text.substr(0, _position + 1));
+            $('#remaining-text').html(_text.substr(_position + 1, _text.length - 1))
+            _position++;
             jumpWhitespace()
         } else {
             element.addClass('wrong').delay(2000);
-            time += 5;
+            _time += 5;
             updateTimerView();
         }
-        if(position == text.length) {
-            clearTimeout(timer);
-            alert('You win! Your time: ' + getTimeString(time)); // TODO: Make nicer
+        if(_position == _text.length) {
+            clearTimeout(_timer);
+            levelCompleted();
         }
     }
 
     function jumpWhitespace() {
-        while(/[^A-Za-z]/.exec(text[position])) {
-            position++;
+        while(/[^A-Za-z]/.exec(_text[_position])) {
+            _position++;
         }
     }
 
     function addTime() {
-        time += 1;
+        _time += 1;
         updateTimerView();
-        timer = setTimeout(addTime, 1000);
+        _timer = setTimeout(addTime, 1000);
     }
 
     function updateTimerView() {
-        $('#timer').html(getTimeString(time));
+        $('#timer').html(getTimeString(_time));
     }
 
     function getTimeString(time) {
-        var minutes = Math.floor(time/60);
-        var seconds = time%60;
+        var minutes = Math.floor(time / 60);
+        var seconds = time % 60;
         return (minutes > 9 ? minutes : '0' + minutes) + ':' + (seconds > 9 ? seconds : '0' + seconds);
     }
 </script>
